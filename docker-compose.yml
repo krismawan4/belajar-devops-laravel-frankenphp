@@ -1,0 +1,55 @@
+services:
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        image: laravel-franken-dev
+        ports:
+            - "3000:80"
+        volumes:
+            - .:/app
+        # Konfigurasi Environment khusus Docker di sini
+        environment:
+            - APP_ENV=local
+            - APP_DEBUG=true
+            # Perbaikan di sini: Jangan gunakan kutip di dalam nilai jika tidak perlu,
+            # atau pastikan formatnya hanya mendefinisikan file worker.
+            - FRANKENPHP_CONFIG=
+            - DB_CONNECTION=mysql
+            - DB_HOST=db
+            - DB_PORT=3306
+            - DB_DATABASE=belajar_devops
+            - DB_USERNAME=riki
+            - DB_PASSWORD=password_anda
+        depends_on:
+            db:
+                condition: service_healthy
+        networks:
+            - laravel-network
+
+    db:
+        image: mariadb:10.11
+        restart: always
+        environment:
+            MARIADB_DATABASE: belajar_devops
+            MARIADB_USER: riki
+            MARIADB_PASSWORD: password_anda
+            MARIADB_ROOT_PASSWORD: root_password_anda
+        ports:
+            - "3307:3306"
+        volumes:
+            - db_data:/var/lib/mysql
+        healthcheck:
+            test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+            interval: 10s
+            timeout: 5s
+            retries: 3
+        networks:
+            - laravel-network
+
+networks:
+    laravel-network:
+        driver: bridge
+
+volumes:
+    db_data:
